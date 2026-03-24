@@ -11,6 +11,8 @@ import { formatDate } from "../../../lib/subscription/planUtils";
 import { useStripeSubscription } from "../../../lib/subscription/useStripeSubscription";
 import { UsageChart } from "../../UsageChart";
 import { authClient } from "@/lib/auth";
+import { useGetSitesFromOrg } from "@/api/admin/hooks/useSites";
+import { useOrganizationMembers } from "@/api/admin/hooks/useOrganizationMembers";
 import { InvoicesCard } from "../components/InvoicesCard";
 import { CancellationDialog } from "./CancellationDialog";
 import { PlanDialog } from "../components/PlanDialog";
@@ -20,6 +22,9 @@ export function PaidPlan() {
 
   const { data: activeOrg } = authClient.useActiveOrganization();
   const organizationId = activeOrg?.id;
+
+  const { data: sitesData } = useGetSitesFromOrg(organizationId);
+  const { data: membersData } = useOrganizationMembers(organizationId ?? "");
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -153,37 +158,73 @@ export function PaidPlan() {
                 <p className="text-neutral-400 text-sm">{formatRenewalDate()}</p>
               </div>
               <div className="space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => createPortalSession("payment_method_update")}
+                  disabled={isProcessing}
+                >
+                  Manage Payment Details
+                </Button>
                 <Button variant="success" onClick={handleChangePlan}>
                   Change Plan
                 </Button>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <h3 className="font-medium mb-2">Usage this month</h3>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm">Events</span>
-                    <span className="text-sm">
-                      {currentUsage.toLocaleString()} / {eventLimit.toLocaleString()}
-                    </span>
-                  </div>
-                  <Progress value={usagePercentage} />
-                </div>
 
-                {currentUsage >= eventLimit && (
-                  <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-800">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-amber-700 dark:text-amber-300">
-                        <strong>Usage limit reached!</strong> You've exceeded your plan's event limit.
-                      </p>
-                      <Button variant="success" size="sm" onClick={handleChangePlan}>
-                        Upgrade Plan
-                      </Button>
-                    </div>
-                  </div>
-                )}
+
+            {currentUsage >= eventLimit && (
+              <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-800">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-amber-700 dark:text-amber-300">
+                    <strong>Usage limit reached!</strong> You've exceeded your plan's event limit.
+                  </p>
+                  <Button variant="success" size="sm" onClick={handleChangePlan}>
+                    Upgrade Plan
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="rounded-lg border p-3 pb-0 overflow-hidden relative">
+                <div className="text-sm text-muted-foreground">Events used this month</div>
+                <div className="text-lg font-semibold mb-3">
+                  {currentUsage.toLocaleString()} / {eventLimit.toLocaleString()}
+                </div>
+                <div className="relative h-1.5 -mx-3">
+                  <div className="bg-neutral-100 dark:bg-neutral-700 h-1.5 w-full absolute bottom-0 left-0"></div>
+                  <div
+                    style={{ width: `${usagePercentage}%` }}
+                    className={`h-1.5 absolute bottom-0 left-0 ${usagePercentage >= 100 ? "bg-red-500" : "bg-accent-400/75"}`}
+                  ></div>
+                </div>
+              </div>
+              <div className="rounded-lg border p-3 pb-0 overflow-hidden relative">
+                <div className="text-sm text-muted-foreground">Websites</div>
+                <div className="text-lg font-semibold mb-3">
+                  {sitesData?.sites.length ?? 0} / {activeSubscription.siteLimit === null ? "Unlimited" : activeSubscription.siteLimit.toLocaleString()}
+                </div>
+                <div className="relative h-1.5 -mx-3">
+                  <div className="bg-neutral-100 dark:bg-neutral-700 h-1.5 w-full absolute bottom-0 left-0"></div>
+                  <div
+                    style={{ width: activeSubscription.siteLimit === null ? "0%" : `${Math.min(((sitesData?.sites.length ?? 0) / activeSubscription.siteLimit) * 100, 100)}%` }}
+                    className="bg-accent-400/75 h-1.5 absolute bottom-0 left-0"
+                  ></div>
+                </div>
+              </div>
+              <div className="rounded-lg border p-3 pb-0 overflow-hidden relative">
+                <div className="text-sm text-muted-foreground">Team Members</div>
+                <div className="text-lg font-semibold mb-3">
+                  {membersData?.data?.length ?? 0} / {activeSubscription.memberLimit === null ? "Unlimited" : activeSubscription.memberLimit.toLocaleString()}
+                </div>
+                <div className="relative h-1.5 -mx-3">
+                  <div className="bg-neutral-100 dark:bg-neutral-700 h-1.5 w-full absolute bottom-0 left-0"></div>
+                  <div
+                    style={{ width: activeSubscription.memberLimit === null ? "0%" : `${Math.min(((membersData?.data?.length ?? 0) / activeSubscription.memberLimit) * 100, 100)}%` }}
+                    className="bg-accent-400/75 h-1.5 absolute bottom-0 left-0"
+                  ></div>
+                </div>
               </div>
             </div>
 
@@ -228,6 +269,6 @@ export function PaidPlan() {
         </CardContent>
       </Card>
       <InvoicesCard />
-    </div>
+    </div >
   );
 }

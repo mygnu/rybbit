@@ -103,7 +103,7 @@ export function NoData() {
               </a>{" "}
               {t("if your script isn't sending traffic.")}
             </span>
-            {siteMetadata?.siteId && <VerifyInstallation siteId={siteMetadata.siteId} />}
+            {/* {siteMetadata?.siteId && <VerifyInstallation siteId={siteMetadata.siteId} />} */}
             {/* Framework Guide Cards */}
             <div className="">
               <h2 className="text-sm font-medium mb-4">{t("Platform Guides")}</h2>
