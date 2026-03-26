@@ -198,11 +198,11 @@ export function LandingPageTemplate({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center justify-items-center">
             <div className="flex items-center justify-center">
               <Image
-                src="/logos/tencent.svg"
-                alt="Tencent"
+                src="/logos/automatio.webp"
+                alt="automatio"
                 width={130}
                 height={40}
-                className="opacity-50 hover:opacity-80 dark:opacity-70 dark:hover:opacity-100 transition-opacity dark:invert grayscale"
+                className="opacity-50 hover:opacity-80 dark:opacity-70 dark:hover:opacity-100 transition-opacity grayscale invert dark:invert-0"
               />
             </div>
             <div className="flex items-center justify-center">
